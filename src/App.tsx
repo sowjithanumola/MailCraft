@@ -83,6 +83,8 @@ export default function App() {
       const errorMessage = error?.message || 'Unknown error';
       if (errorMessage.includes('API_KEY_INVALID') || errorMessage.includes('API key not found')) {
         alert('Invalid or missing API Key. Please ensure GEMINI_API_KEY is correctly configured in your environment.');
+      } else if (errorMessage.includes('503') || errorMessage.includes('high demand') || errorMessage.includes('UNAVAILABLE')) {
+        alert('The AI model is currently experiencing high demand. We tried retrying, but it\'s still busy. Please wait a few seconds and try clicking "Generate" again.');
       } else {
         alert(`Failed to generate email: ${errorMessage}. Please try again.`);
       }

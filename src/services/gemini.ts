@@ -26,22 +26,39 @@ export async function generateEmail(request: EmailRequest) {
     The body should include a proper greeting, the main content, and a professional closing.
   `;
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          subject: { type: Type.STRING },
-          body: { type: Type.STRING }
-        },
-        required: ["subject", "body"]
-      }
-    }
-  });
+  // Retry logic for 503 errors
+  let lastError: any;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              subject: { type: Type.STRING },
+              body: { type: Type.STRING }
+            },
+            required: ["subject", "body"]
+          }
+        }
+      });
 
-  const result = JSON.parse(response.text || "{}");
-  return result as { subject: string; body: string };
+      const result = JSON.parse(response.text || "{}");
+      return result as { subject: string; body: string };
+    } catch (error: any) {
+      lastError = error;
+      const isRetryable = error?.message?.includes('503') || error?.message?.includes('high demand') || error?.message?.includes('UNAVAILABLE');
+      
+      if (isRetryable && attempt < 3) {
+        console.warn(`Attempt ${attempt} failed due to high demand. Retrying in ${attempt * 2}s...`);
+        await new Promise(resolve => setTimeout(resolve, attempt * 2000));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw lastError;
 }
