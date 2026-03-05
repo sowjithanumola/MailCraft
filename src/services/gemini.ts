@@ -11,7 +11,9 @@ export async function generateEmail(request: EmailRequest) {
   if (!apiKey) {
     throw new Error("API key not found. Please ensure GEMINI_API_KEY is set in your environment variables.");
   }
-  const model = "gemini-3-flash-preview";
+  
+  // Using gemini-1.5-flash-latest as it's often more stable for general tasks
+  const model = "gemini-1.5-flash-latest";
   
   const prompt = `
     Generate a professional email based on the following details:
@@ -30,7 +32,12 @@ export async function generateEmail(request: EmailRequest) {
   let lastError: any;
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      const response = await ai.models.generateContent({
+      // Create a promise that rejects after 15 seconds
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error("Request timed out after 15 seconds")), 15000)
+      );
+
+      const generatePromise = ai.models.generateContent({
         model,
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
@@ -46,14 +53,21 @@ export async function generateEmail(request: EmailRequest) {
         }
       });
 
+      // Race the generation against the timeout
+      const response = await Promise.race([generatePromise, timeoutPromise]) as any;
+
       const result = JSON.parse(response.text || "{}");
       return result as { subject: string; body: string };
     } catch (error: any) {
       lastError = error;
-      const isRetryable = error?.message?.includes('503') || error?.message?.includes('high demand') || error?.message?.includes('UNAVAILABLE');
+      const isRetryable = 
+        error?.message?.includes('503') || 
+        error?.message?.includes('high demand') || 
+        error?.message?.includes('UNAVAILABLE') ||
+        error?.message?.includes('timed out');
       
       if (isRetryable && attempt < 3) {
-        console.warn(`Attempt ${attempt} failed due to high demand. Retrying in ${attempt * 2}s...`);
+        console.warn(`Attempt ${attempt} failed. Retrying in ${attempt * 2}s...`);
         await new Promise(resolve => setTimeout(resolve, attempt * 2000));
         continue;
       }
