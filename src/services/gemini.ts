@@ -12,8 +12,8 @@ export async function generateEmail(request: EmailRequest) {
     throw new Error("API key not found. Please ensure GEMINI_API_KEY is set in your environment variables.");
   }
   
-  // Using gemini-1.5-flash-latest as it's often more stable for general tasks
-  const model = "gemini-1.5-flash-latest";
+  // Using gemini-3-flash-preview as recommended in the guidelines
+  const model = "gemini-3-flash-preview";
   
   const prompt = `
     Generate a professional email based on the following details:
