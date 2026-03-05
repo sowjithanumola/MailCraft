@@ -78,9 +78,14 @@ export default function App() {
       if (window.innerWidth < 768) {
         outputRef.current?.scrollIntoView({ behavior: 'smooth' });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Generation failed:', error);
-      alert('Failed to generate email. Please try again.');
+      const errorMessage = error?.message || 'Unknown error';
+      if (errorMessage.includes('API_KEY_INVALID') || errorMessage.includes('API key not found')) {
+        alert('Invalid or missing API Key. Please ensure GEMINI_API_KEY is correctly configured in your environment.');
+      } else {
+        alert(`Failed to generate email: ${errorMessage}. Please try again.`);
+      }
     } finally {
       setIsGenerating(false);
     }

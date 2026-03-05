@@ -1,9 +1,16 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { EmailRequest } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const apiKey = process.env.GEMINI_API_KEY || "";
+if (!apiKey) {
+  console.warn("GEMINI_API_KEY is not set in the environment.");
+}
+const ai = new GoogleGenAI({ apiKey });
 
 export async function generateEmail(request: EmailRequest) {
+  if (!apiKey) {
+    throw new Error("API key not found. Please ensure GEMINI_API_KEY is set in your environment variables.");
+  }
   const model = "gemini-3-flash-preview";
   
   const prompt = `
