@@ -20,16 +20,16 @@
 
 @layer base {
   body {
-    @apply font-sans antialiased text-slate-900 bg-slate-50 dark:text-slate-100 dark:bg-slate-950 transition-colors duration-300;
+    @apply font-sans antialiased text-slate-900 bg-slate-50 transition-colors duration-300;
   }
 }
 
 .glass {
-  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800;
+  @apply bg-white/80 backdrop-blur-md border border-slate-200;
 }
 
 .input-field {
-  @apply w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all;
+  @apply w-full px-4 py-2 rounded-xl border border-slate-200 bg-white focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all;
 }
 
 .btn-primary {
@@ -37,5 +37,5 @@
 }
 
 .btn-secondary {
-  @apply px-6 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl font-medium transition-all flex items-center justify-center gap-2;
+  @apply px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl font-medium transition-all flex items-center justify-center gap-2;
 }
