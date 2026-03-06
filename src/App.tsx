@@ -60,8 +60,19 @@ export default function App() {
     
     setIsGenerating(true);
     setIsEditing(false);
+    
+    let isTimedOut = false;
+    const timeoutId = setTimeout(() => {
+      isTimedOut = true;
+      setIsGenerating(false);
+      alert('Request timed out. The AI service is taking too long to respond. Please try again.');
+    }, 30000);
+
     try {
       const result = await generateEmail(request);
+      if (isTimedOut) return;
+      clearTimeout(timeoutId);
+      
       const newEmail: GeneratedEmail = {
         id: crypto.randomUUID(),
         subject: result.subject,
@@ -79,16 +90,19 @@ export default function App() {
         outputRef.current?.scrollIntoView({ behavior: 'smooth' });
       }
     } catch (error: any) {
+      if (isTimedOut) return;
+      clearTimeout(timeoutId);
       console.error('Generation failed:', error);
       const errorMessage = error?.message || 'Unknown error';
-      if (errorMessage.includes('API_KEY_INVALID') || errorMessage.includes('API key not found')) {
-        alert('Invalid or missing API Key. Please ensure GEMINI_API_KEY is correctly configured in your environment.');
-      } else if (errorMessage.includes('leaked')) {
-        alert('Security Alert: Your API key has been disabled because it was reported as leaked. Please generate a NEW API key from Google AI Studio and update your environment variables.');
-      } else if (errorMessage.includes('503') || errorMessage.includes('high demand') || errorMessage.includes('UNAVAILABLE')) {
-        alert('The AI model is currently experiencing high demand. We tried retrying, but it\'s still busy. Please wait a few seconds and try clicking "Generate" again.');
+      
+      if (errorMessage.includes('API key not found') || errorMessage.includes('API_KEY_INVALID')) {
+        alert('API Key Error: Please ensure your GEMINI_API_KEY is correctly set in your environment variables.');
+      } else if (errorMessage.includes('busy') || errorMessage.includes('high demand') || errorMessage.includes('503')) {
+        alert('AI is currently busy: Google\'s servers are experiencing high demand. Please wait 10 seconds and try again.');
+      } else if (errorMessage.includes('security') || errorMessage.includes('leaked')) {
+        alert('Security Alert: Your API key has been disabled. Please generate a new one from Google AI Studio.');
       } else {
-        alert(`Failed to generate email: ${errorMessage}. Please try again.`);
+        alert(`Generation Error: ${errorMessage}`);
       }
     } finally {
       setIsGenerating(false);
